@@ -14,9 +14,10 @@ import { Issue } from "@shared/schema";
 export default function Home() {
   const { user } = useAuth();
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [activeTab, setActiveTab] = useState("issues");
   const [filters, setFilters] = useState({
-    category: "",
-    status: "",
+    category: "all",
+    status: "all",
     radius: "5",
     search: "",
   });
@@ -32,11 +33,19 @@ export default function Home() {
           });
         },
         (error) => {
-          console.error("Error getting location:", error);
-          // Fallback to default location (downtown)
-          setLocation({ lat: 40.7128, lng: -74.0060 });
+          console.warn("Location access denied or failed:", error.message);
+          // Fallback to demo location (San Francisco downtown)
+          setLocation({ lat: 37.7749, lng: -122.4194 });
+        },
+        {
+          timeout: 10000,
+          enableHighAccuracy: false,
+          maximumAge: 300000 // 5 minutes
         }
       );
+    } else {
+      // Fallback for browsers without geolocation
+      setLocation({ lat: 37.7749, lng: -122.4194 });
     }
   }, []);
 
@@ -47,8 +56,8 @@ export default function Home() {
       location?.lat,
       location?.lng,
       filters.radius,
-      filters.category,
-      filters.status,
+      filters.category === "all" ? undefined : filters.category,
+      filters.status === "all" ? undefined : filters.status,
     ],
     enabled: !!location,
   });
@@ -109,7 +118,7 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <Tabs defaultValue="issues" className="mt-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
           {/* Tab Navigation */}
           <div className="bg-white rounded-lg shadow-sm mb-6">
             <TabsList className="w-full">
@@ -148,7 +157,7 @@ export default function Home() {
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       <SelectItem value="roads">Roads</SelectItem>
                       <SelectItem value="lighting">Lighting</SelectItem>
                       <SelectItem value="water">Water Supply</SelectItem>
@@ -165,7 +174,7 @@ export default function Home() {
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Status</SelectItem>
+                      <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="reported">Reported</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="resolved">Resolved</SelectItem>
@@ -198,7 +207,7 @@ export default function Home() {
                   onClick={() =>
                     setFilters({
                       ...filters,
-                      category: filters.category === category.id ? "" : category.id,
+                      category: filters.category === category.id ? "all" : category.id,
                     })
                   }
                 >
@@ -227,10 +236,7 @@ export default function Home() {
                 <p className="text-gray-600">No issues found in your area.</p>
                 <Button
                   className="mt-4 bg-civic-blue hover:bg-blue-700"
-                  onClick={() => {
-                    const tabsTrigger = document.querySelector('[value="report"]') as HTMLElement;
-                    tabsTrigger?.click();
-                  }}
+                  onClick={() => setActiveTab("report")}
                 >
                   Report the First Issue
                 </Button>
@@ -253,19 +259,39 @@ export default function Home() {
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 sm:hidden">
         <div className="flex justify-around">
-          <Button variant="ghost" size="sm" className="flex flex-col items-center py-2">
+          <Button 
+            variant={activeTab === "issues" ? "default" : "ghost"} 
+            size="sm" 
+            className="flex flex-col items-center py-2"
+            onClick={() => setActiveTab("issues")}
+          >
             <span className="text-xl mb-1">📋</span>
             <span className="text-xs">Issues</span>
           </Button>
-          <Button variant="ghost" size="sm" className="flex flex-col items-center py-2">
+          <Button 
+            variant={activeTab === "map" ? "default" : "ghost"} 
+            size="sm" 
+            className="flex flex-col items-center py-2"
+            onClick={() => setActiveTab("map")}
+          >
             <span className="text-xl mb-1">🗺️</span>
             <span className="text-xs">Map</span>
           </Button>
-          <Button variant="ghost" size="sm" className="flex flex-col items-center py-2">
+          <Button 
+            variant={activeTab === "report" ? "default" : "ghost"} 
+            size="sm" 
+            className="flex flex-col items-center py-2"
+            onClick={() => setActiveTab("report")}
+          >
             <span className="text-xl mb-1">➕</span>
             <span className="text-xs">Report</span>
           </Button>
-          <Button variant="ghost" size="sm" className="flex flex-col items-center py-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex flex-col items-center py-2"
+            onClick={() => window.location.href = '/api/logout'}
+          >
             <User className="w-5 h-5 mb-1" />
             <span className="text-xs">Profile</span>
           </Button>

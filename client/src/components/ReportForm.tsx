@@ -141,7 +141,7 @@ export default function ReportForm({ userLocation, onSuccess }: ReportFormProps)
           form.setValue("longitude", position.coords.longitude);
           
           // Reverse geocode to get address (in real app, would use a geocoding service)
-          form.setValue("address", `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
+          form.setValue("address", `Lat: ${position.coords.latitude.toFixed(6)}, Lng: ${position.coords.longitude.toFixed(6)}`);
           
           toast({
             title: "Location Updated",
@@ -149,13 +149,33 @@ export default function ReportForm({ userLocation, onSuccess }: ReportFormProps)
           });
         },
         (error) => {
+          console.warn("Location access error:", error.message);
+          // Use demo location instead
+          form.setValue("latitude", 37.7749);
+          form.setValue("longitude", -122.4194);
+          form.setValue("address", "Demo Location - San Francisco, CA");
+          
           toast({
-            title: "Location Error",
-            description: "Unable to get your current location.",
-            variant: "destructive",
+            title: "Using Demo Location",
+            description: "Set to San Francisco for demonstration purposes.",
           });
+        },
+        {
+          timeout: 10000,
+          enableHighAccuracy: false,
+          maximumAge: 300000
         }
       );
+    } else {
+      // Fallback for browsers without geolocation
+      form.setValue("latitude", 37.7749);
+      form.setValue("longitude", -122.4194);
+      form.setValue("address", "Demo Location - San Francisco, CA");
+      
+      toast({
+        title: "Using Demo Location",
+        description: "Geolocation not available, using demo location.",
+      });
     }
   };
 
