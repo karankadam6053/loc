@@ -1,0 +1,579 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicTrack - Report Local Issues</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'roboto': ['Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        'civic-blue': '#1976D2',
+                        'civic-green': '#388E3C',
+                        'civic-orange': '#F57C00',
+                        'civic-red': '#D32F2F',
+                        'civic-surface': '#FAFAFA',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple:active::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            animation: ripple-effect 0.6s linear;
+        }
+        @keyframes ripple-effect {
+            to {
+                width: 300px;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="font-roboto bg-civic-surface min-h-screen">
+    <!-- @COMPONENT: Header [navigation and location display] -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-civic-blue p-2 rounded-lg">
+                        <i class="fas fa-city text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">CivicTrack</h1>
+                        <p class="text-xs text-gray-500" data-bind="user.location">Downtown District</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-600 hover:text-civic-blue transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -mt-8 ml-3 bg-civic-red text-white rounded-full text-xs w-5 h-5 flex items-center justify-center" data-bind="notifications.count">3</span>
+                    </button>
+                    <div class="w-8 h-8 bg-civic-blue rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <!-- @COMPONENT: MainContent [tabbed interface with home, map, report] -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow-sm mt-4 mb-6">
+            <nav class="flex">
+                <button class="flex-1 py-3 px-4 text-center font-medium text-civic-blue border-b-2 border-civic-blue bg-blue-50 ripple" data-tab="home">
+                    <i class="fas fa-home mr-2"></i>Issues
+                </button>
+                <button class="flex-1 py-3 px-4 text-center font-medium text-gray-500 hover:text-civic-blue transition-colors ripple" data-tab="map">
+                    <i class="fas fa-map mr-2"></i>Map
+                </button>
+                <button class="flex-1 py-3 px-4 text-center font-medium text-gray-500 hover:text-civic-blue transition-colors ripple" data-tab="report">
+                    <i class="fas fa-plus mr-2"></i>Report
+                </button>
+            </nav>
+        </div>
+
+        <!-- Home Tab Content -->
+        <div id="home-tab" class="animate-fade-in">
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" placeholder="Search issues..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue focus:border-transparent">
+                            <option>All Categories</option>
+                            <option>Roads</option>
+                            <option>Lighting</option>
+                            <option>Water Supply</option>
+                            <option>Cleanliness</option>
+                            <option>Public Safety</option>
+                            <option>Obstructions</option>
+                        </select>
+                        <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue focus:border-transparent">
+                            <option>All Status</option>
+                            <option>Reported</option>
+                            <option>In Progress</option>
+                            <option>Resolved</option>
+                        </select>
+                        <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue focus:border-transparent">
+                            <option>5 km</option>
+                            <option>3 km</option>
+                            <option>1 km</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issue Categories Quick Access -->
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6">
+                <button class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center card-hover">
+                    <i class="fas fa-road text-civic-blue text-2xl mb-2"></i>
+                    <p class="text-xs font-medium text-gray-700">Roads</p>
+                </button>
+                <button class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center card-hover">
+                    <i class="fas fa-lightbulb text-civic-orange text-2xl mb-2"></i>
+                    <p class="text-xs font-medium text-gray-700">Lighting</p>
+                </button>
+                <button class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center card-hover">
+                    <i class="fas fa-tint text-blue-500 text-2xl mb-2"></i>
+                    <p class="text-xs font-medium text-gray-700">Water</p>
+                </button>
+                <button class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center card-hover">
+                    <i class="fas fa-trash text-green-500 text-2xl mb-2"></i>
+                    <p class="text-xs font-medium text-gray-700">Cleanliness</p>
+                </button>
+                <button class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center card-hover">
+                    <i class="fas fa-shield-alt text-civic-red text-2xl mb-2"></i>
+                    <p class="text-xs font-medium text-gray-700">Safety</p>
+                </button>
+                <button class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center card-hover">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
+                    <p class="text-xs font-medium text-gray-700">Blocked</p>
+                </button>
+            </div>
+
+            <!-- Issues Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- @MAP: issues.map(issue => ( -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden card-hover transition-all duration-300" data-mock="true">
+                    <!-- Pothole on Main Street with visible road damage -->
+                    <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" alt="Pothole damage on city street" class="w-full h-48 object-cover" data-mock-image="true">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-civic-red text-white px-2 py-1 rounded text-xs font-medium">Reported</span>
+                            <span class="text-xs text-gray-500">2 hours ago</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1" data-bind="issue.title">Large pothole on Main St</h3>
+                        <p class="text-sm text-gray-600 mb-3" data-bind="issue.description">Deep pothole causing vehicle damage near the intersection...</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <i class="fas fa-road mr-1"></i>
+                                <span data-bind="issue.category">Roads</span>
+                                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>
+                                <span data-bind="issue.distance">0.8 km</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-gray-400 hover:text-civic-blue">
+                                    <i class="fas fa-flag text-sm"></i>
+                                </button>
+                                <span class="text-xs text-gray-500" data-bind="issue.reports">5 reports</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden card-hover transition-all duration-300" data-mock="true">
+                    <!-- Broken street light creating safety hazard -->
+                    <img src="https://pixabay.com/get/g1f4d979c929c130a7a3d837bde0b30cf45831aa2a505c93b9763280cd5eb7ec81831ebabf6da531b141accff0a78bd6eca45a8a7ccd5df548c654518ffda6c10_1280.jpg" alt="Broken street light at night" class="w-full h-48 object-cover" data-mock-image="true">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-civic-orange text-white px-2 py-1 rounded text-xs font-medium">In Progress</span>
+                            <span class="text-xs text-gray-500">1 day ago</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1" data-bind="issue.title">Broken street light</h3>
+                        <p class="text-sm text-gray-600 mb-3" data-bind="issue.description">Street light has been flickering for weeks, now completely dark...</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                <span data-bind="issue.category">Lighting</span>
+                                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>
+                                <span data-bind="issue.distance">1.2 km</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-gray-400 hover:text-civic-blue">
+                                    <i class="fas fa-flag text-sm"></i>
+                                </button>
+                                <span class="text-xs text-gray-500" data-bind="issue.reports">12 reports</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden card-hover transition-all duration-300" data-mock="true">
+                    <!-- Overflowing garbage bin with waste scattered around -->
+                    <img src="https://pixabay.com/get/gdf5bf2df973810111839c5bcc812b8dcca19bf79e511d7aa02b1dfa54a6f8f6b440cfe203bf15472ff62070bc958161e9f5a5023254869157f64a1269028461a_1280.jpg" alt="Overflowing garbage bin on sidewalk" class="w-full h-48 object-cover" data-mock-image="true">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-civic-green text-white px-2 py-1 rounded text-xs font-medium">Resolved</span>
+                            <span class="text-xs text-gray-500">3 days ago</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1" data-bind="issue.title">Overflowing garbage bin</h3>
+                        <p class="text-sm text-gray-600 mb-3" data-bind="issue.description">Public bin hasn't been emptied, attracting pests and creating mess...</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <i class="fas fa-trash mr-1"></i>
+                                <span data-bind="issue.category">Cleanliness</span>
+                                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>
+                                <span data-bind="issue.distance">2.1 km</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-gray-400 hover:text-civic-blue">
+                                    <i class="fas fa-flag text-sm"></i>
+                                </button>
+                                <span class="text-xs text-gray-500" data-bind="issue.reports">8 reports</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden card-hover transition-all duration-300" data-mock="true">
+                    <!-- Water leak creating puddle on street -->
+                    <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" alt="Water leak on city street creating puddle" class="w-full h-48 object-cover" data-mock-image="true">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-civic-red text-white px-2 py-1 rounded text-xs font-medium">Reported</span>
+                            <span class="text-xs text-gray-500">5 hours ago</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1" data-bind="issue.title">Water main leak</h3>
+                        <p class="text-sm text-gray-600 mb-3" data-bind="issue.description">Continuous water leak from underground pipe, wasting water...</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <i class="fas fa-tint mr-1"></i>
+                                <span data-bind="issue.category">Water Supply</span>
+                                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>
+                                <span data-bind="issue.distance">0.3 km</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-gray-400 hover:text-civic-blue">
+                                    <i class="fas fa-flag text-sm"></i>
+                                </button>
+                                <span class="text-xs text-gray-500" data-bind="issue.reports">15 reports</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden card-hover transition-all duration-300" data-mock="true">
+                    <!-- Fallen tree blocking sidewalk -->
+                    <img src="https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" alt="Fallen tree blocking pedestrian path" class="w-full h-48 object-cover" data-mock-image="true">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-civic-orange text-white px-2 py-1 rounded text-xs font-medium">In Progress</span>
+                            <span class="text-xs text-gray-500">6 hours ago</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1" data-bind="issue.title">Fallen tree blocking path</h3>
+                        <p class="text-sm text-gray-600 mb-3" data-bind="issue.description">Large branch fell after storm, completely blocking sidewalk access...</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                <span data-bind="issue.category">Obstructions</span>
+                                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>
+                                <span data-bind="issue.distance">1.7 km</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-gray-400 hover:text-civic-blue">
+                                    <i class="fas fa-flag text-sm"></i>
+                                </button>
+                                <span class="text-xs text-gray-500" data-bind="issue.reports">7 reports</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden card-hover transition-all duration-300" data-mock="true">
+                    <!-- Open manhole without proper safety barriers -->
+                    <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" alt="Open manhole cover creating safety hazard" class="w-full h-48 object-cover" data-mock-image="true">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-civic-red text-white px-2 py-1 rounded text-xs font-medium">Reported</span>
+                            <span class="text-xs text-gray-500">30 minutes ago</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-1" data-bind="issue.title">Open manhole - urgent</h3>
+                        <p class="text-sm text-gray-600 mb-3" data-bind="issue.description">Manhole cover removed for maintenance but left unattended, very dangerous...</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <i class="fas fa-shield-alt mr-1"></i>
+                                <span data-bind="issue.category">Public Safety</span>
+                                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>
+                                <span data-bind="issue.distance">0.5 km</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-gray-400 hover:text-civic-blue">
+                                    <i class="fas fa-flag text-sm"></i>
+                                </button>
+                                <span class="text-xs text-gray-500" data-bind="issue.reports">23 reports</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+
+            <!-- Load More Button -->
+            <div class="text-center mt-8">
+                <button class="bg-civic-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors ripple">
+                    Load More Issues
+                </button>
+            </div>
+        </div>
+
+        <!-- Map Tab Content (Initially Hidden) -->
+        <div id="map-tab" class="hidden">
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="h-96 bg-gray-200 relative">
+                    <!-- Mock map interface -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="fas fa-map text-6xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600">Interactive Map View</p>
+                            <p class="text-sm text-gray-500"><!-- @FUNCTIONALITY: Integrate with Google Maps or OpenStreetMap API to show issue pins --></p>
+                        </div>
+                    </div>
+                    <!-- Mock pins -->
+                    <div class="absolute top-20 left-32 bg-civic-red text-white rounded-full w-8 h-8 flex items-center justify-center text-xs">
+                        <i class="fas fa-road"></i>
+                    </div>
+                    <div class="absolute top-40 left-48 bg-civic-orange text-white rounded-full w-8 h-8 flex items-center justify-center text-xs">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="absolute top-32 right-40 bg-civic-green text-white rounded-full w-8 h-8 flex items-center justify-center text-xs">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                </div>
+                <div class="p-4 border-t">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-civic-red rounded-full mr-2"></div>
+                                <span class="text-sm">Reported (15)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-civic-orange rounded-full mr-2"></div>
+                                <span class="text-sm">In Progress (8)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-civic-green rounded-full mr-2"></div>
+                                <span class="text-sm">Resolved (23)</span>
+                            </div>
+                        </div>
+                        <button class="bg-civic-blue text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-crosshairs mr-2"></i>My Location
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Tab Content (Initially Hidden) -->
+        <div id="report-tab" class="hidden">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Report New Issue</h2>
+                
+                <form class="space-y-6">
+                    <!-- @STATE: reportForm:object = {title:'', description:'', category:'', photos:[], anonymous:false} -->
+                    
+                    <!-- Issue Title -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Issue Title *</label>
+                        <input type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue focus:border-transparent" placeholder="Brief description of the issue">
+                    </div>
+
+                    <!-- Category Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                        <select required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue focus:border-transparent">
+                            <option value="">Select a category</option>
+                            <option value="roads">Roads (potholes, obstructions)</option>
+                            <option value="lighting">Lighting (broken or flickering lights)</option>
+                            <option value="water">Water Supply (leaks, low pressure)</option>
+                            <option value="cleanliness">Cleanliness (overflowing bins, garbage)</option>
+                            <option value="safety">Public Safety (open manholes, exposed wiring)</option>
+                            <option value="obstructions">Obstructions (fallen trees, debris)</option>
+                        </select>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                        <textarea required rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civic-blue focus:border-transparent" placeholder="Provide detailed information about the issue, including location specifics and any safety concerns"></textarea>
+                    </div>
+
+                    <!-- Photo Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Photos (Up to 3)</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-civic-blue transition-colors">
+                            <i class="fas fa-camera text-3xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-600 mb-2">Click to upload photos or drag and drop</p>
+                            <p class="text-xs text-gray-500">Maximum 3 photos, 5MB each</p>
+                            <input type="file" multiple accept="image/*" class="hidden" data-implementation="File upload with preview and validation">
+                        </div>
+                        <!-- Photo preview area -->
+                        <div class="mt-3 grid grid-cols-3 gap-3" data-implementation="Show uploaded photo previews here">
+                            <!-- @FUNCTIONALITY: Display uploaded photos with remove option -->
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                        <div class="flex gap-3">
+                            <button type="button" class="flex-1 bg-civic-blue text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors ripple">
+                                <i class="fas fa-crosshairs mr-2"></i>Use Current Location
+                            </button>
+                            <button type="button" class="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors ripple">
+                                <i class="fas fa-map-marker-alt mr-2"></i>Pick on Map
+                            </button>
+                        </div>
+                        <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-600" data-bind="location.address">123 Main Street, Downtown District</p>
+                            <p class="text-xs text-gray-500" data-bind="location.coordinates">Coordinates: 40.7128, -74.0060</p>
+                        </div>
+                    </div>
+
+                    <!-- Anonymous Reporting Option -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="anonymous" class="h-4 w-4 text-civic-blue focus:ring-civic-blue border-gray-300 rounded">
+                        <label for="anonymous" class="ml-2 block text-sm text-gray-700">
+                            Report anonymously
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex gap-3">
+                        <button type="submit" class="flex-1 bg-civic-blue text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium ripple" data-event="click:handleSubmit" data-implementation="Should validate form and submit issue">
+                            <i class="fas fa-paper-plane mr-2"></i>Submit Report
+                        </button>
+                        <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <!-- @END_COMPONENT: MainContent -->
+
+    <!-- @COMPONENT: FloatingActionButton [quick report button for mobile] -->
+    <div class="fixed bottom-24 right-6 sm:hidden">
+        <button class="bg-civic-blue text-white w-14 h-14 rounded-full shadow-lg hover:bg-blue-700 transition-colors ripple">
+            <i class="fas fa-plus text-xl"></i>
+        </button>
+    </div>
+    <!-- @END_COMPONENT: FloatingActionButton -->
+
+    <!-- @COMPONENT: BottomNavigation [mobile navigation] -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 sm:hidden">
+        <div class="flex justify-around">
+            <button class="flex flex-col items-center py-2 text-civic-blue" data-tab="home">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Issues</span>
+            </button>
+            <button class="flex flex-col items-center py-2 text-gray-400" data-tab="map">
+                <i class="fas fa-map text-xl mb-1"></i>
+                <span class="text-xs">Map</span>
+            </button>
+            <button class="flex flex-col items-center py-2 text-gray-400" data-tab="report">
+                <i class="fas fa-plus text-xl mb-1"></i>
+                <span class="text-xs">Report</span>
+            </button>
+            <button class="flex flex-col items-center py-2 text-gray-400">
+                <i class="fas fa-user text-xl mb-1"></i>
+                <span class="text-xs">Profile</span>
+            </button>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: BottomNavigation -->
+
+    <!-- JavaScript for Tab Functionality -->
+    <script>
+        (function() {
+            // Tab switching functionality
+            const tabButtons = document.querySelectorAll('[data-tab]');
+            const tabContents = {
+                'home': document.getElementById('home-tab'),
+                'map': document.getElementById('map-tab'),
+                'report': document.getElementById('report-tab')
+            };
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.getAttribute('data-tab');
+                    
+                    // Update button styles
+                    tabButtons.forEach(btn => {
+                        if (btn.getAttribute('data-tab') === targetTab) {
+                            btn.classList.add('text-civic-blue', 'border-b-2', 'border-civic-blue', 'bg-blue-50');
+                            btn.classList.remove('text-gray-500');
+                        } else {
+                            btn.classList.remove('text-civic-blue', 'border-b-2', 'border-civic-blue', 'bg-blue-50');
+                            btn.classList.add('text-gray-500');
+                        }
+                    });
+
+                    // Show/hide tab content
+                    Object.keys(tabContents).forEach(key => {
+                        if (key === targetTab) {
+                            tabContents[key].classList.remove('hidden');
+                            tabContents[key].classList.add('animate-fade-in');
+                        } else {
+                            tabContents[key].classList.add('hidden');
+                            tabContents[key].classList.remove('animate-fade-in');
+                        }
+                    });
+                });
+            });
+
+            // Mock form functionality
+            const reportForm = document.querySelector('#report-tab form');
+            if (reportForm) {
+                reportForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    // TODO: Implement form validation and submission
+                    alert('Issue report submitted successfully! (This is a mock implementation)');
+                });
+            }
+
+            // Mock file upload
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    // TODO: Implement file upload with preview
+                    console.log('Files selected:', e.target.files.length);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
